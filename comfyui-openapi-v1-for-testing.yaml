@@ -1,0 +1,375 @@
+openapi: 3.0.1
+info:
+  title: ComfyUI Backend
+  description: |-
+    ComfyUI is a versatile and modular stable diffusion Graphical User Interface (GUI) with a user-friendly 
+    graph and nodes interface. It enables users to seamlessly create and execute advanced stable diffusion 
+    pipelines using an intuitive flowchart-based interface. Additionally, ComfyUI provides a powerful backend 
+    that allows users to leverage these diffusion pipelines. This documentation serves as your comprehensive guide 
+    enabling you to integrate the ComfyUI backend into your projects, step by step. It empowers you to effortlessly 
+    generate impressive images and unlock the full potential of the API for a wide range of applications.
+
+    Some useful links:
+    - [ComfyUI Documentation](https://blenderneko.github.io/ComfyUI-docs/)
+    - [ComfyUI GitHub Repository](https://github.com/comfyanonymous/ComfyUI)
+    - [ComfyUI Examples](https://comfyanonymous.github.io/ComfyUI_examples/)
+
+    NOTE: When making requests to our API, you should include the following in the HTTP headers:
+    Authorization Header: Set the "Authorization" header to "Basic" followed by a base64-encoded string of your username and password, separated by a colon.
+  version: 'v1'
+servers:
+  - url: https://{endpoint}/comfyui
+    variables:
+      endpoint:
+        default: your-resource-name.platform.mattel
+security:
+  - apiKey: []
+tags:
+  - name: comfyui
+    description: Everything about your images
+    externalDocs:
+      description: Find out more
+      url: http://swagger.io
+paths:
+  /prompt:
+    post:
+      tags:
+        - comfyui
+      summary: Sends a prompt to queue 
+      description: 'Generates an image using SDXL. Please note that the processing may introduce a slight delay, typically a few seconds.'
+      operationId: propmtQueue
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Prompt'
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiPromptResponse'
+        401:
+           $ref: '#/components/responses/UnauthorizedError'
+
+  /history/{prompt_id}:
+    get:
+      tags:
+        - comfyui
+      summary: List the prompts generated
+      description: 'List the prompts generated with an output that includes the image location.'
+      operationId: promptHistory
+      parameters:
+        - name: prompt_id
+          in: path
+          description: promp id to list result
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiHistoryResponse'
+        401:
+           $ref: '#/components/responses/UnauthorizedError'
+
+  /view:
+    get:
+      tags:
+        - comfyui
+      summary: Download image
+      description: 'To download an image, you should locate its location in the output from the history method.'
+      operationId: downloadImage
+      parameters:
+        - name: filename
+          in: query
+          description: The image name for download
+          required: true
+          schema:
+            type: string
+        - name: location
+          in: query
+          description: The image location for download
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+
+components:
+  responses:
+    UnauthorizedError:
+      description: Authentication information is missing or invalid
+      headers:
+        Authorization:
+          schema:
+            type: string
+            description: Use Basic Authentication with a username and password.
+            example: "Basic c2R4bHVzZXIwMTpz5SNWNDSTZJa3BYVkNKOQ=="
+  schemas:
+    Prompt: 
+      type: object
+      properties:
+        3: 
+          type: object
+          properties:
+            inputs:
+              type: object
+              properties:
+                seed: 
+                  type: integer
+                  format: int64
+                  example: 1037796423344685
+                steps: 
+                  type: integer
+                  format: int64
+                  example: 20
+                cfg: 
+                  type: integer
+                  format: int64
+                  example: 8
+                sampler_name: 
+                  type: string
+                  example: "euler"
+                scheduler: 
+                  type: string
+                  example: "normal"
+                denoise: 
+                  type: integer
+                  format: int64
+                  example: 1
+                model: 
+                  type: array
+                  items:
+                    anyOf:
+                      - type: string
+                      - type: integer
+                  example:
+                    - "4"
+                    - 0
+                positive:
+                  type: array
+                  items:
+                    anyOf:
+                      - type: string
+                      - type: integer
+                  example:
+                    - "6"
+                    - 0
+                negative:
+                  type: array 
+                  items:
+                    anyOf:
+                      - type: string
+                      - type: integer
+                  example: 
+                    - "7"
+                    - 0
+                latent_image:
+                  type: array 
+                  items:
+                    anyOf:
+                      - type: string
+                      - type: integer
+                  example: 
+                    - "5"
+                    -  0
+            class_type:
+              type: string 
+              example: "KSampler"
+        4:
+          type: object
+          properties:
+            inputs: 
+              type: object
+              properties:
+                ckpt_name: 
+                  type: string
+                  example: "SDXL/sd_xl_base_1.0.safetensors"
+            class_type:
+              type: string 
+              example: "CheckpointLoaderSimple"
+        5:
+          type: object
+          properties:
+            inputs:
+              type: object
+              properties:
+                width: 
+                  type: integer
+                  format: int64
+                  example: 512
+                height:
+                  type: integer
+                  format: int64
+                  example: 512
+                batch_size:
+                  type: integer
+                  format: int64
+                  example: 1
+    
+            class_type:
+              type: string 
+              example: "EmptyLatentImage"
+        6: 
+          type: object
+          properties:
+            inputs:
+              type: object
+              properties:
+                text: 
+                  type: string
+                  example: "imagine a dog"
+                clip: 
+                  type: array
+                  items:
+                    anyOf:
+                      - type: string
+                      - type: integer
+                  example: 
+                    - "4"
+                    - 1
+            class_type:
+              type: string 
+              example: "CLIPTextEncode"
+        7:
+          type: object
+          properties:
+            inputs:
+              type: object
+              properties:
+                text:
+                  type: string
+                  example: "text, watermark"
+                clip:
+                  type: array
+                  items:
+                    anyOf:
+                      - type: string
+                      - type: integer
+                  example:
+                    - "4"
+                    - 1
+            class_type:
+              type: string 
+              example: "CLIPTextEncode"
+        8:
+          type: object
+          properties:
+            inputs: 
+              type: object 
+              properties:
+                samples: 
+                  type: array
+                  items:
+                    anyOf:
+                      - type: string
+                      - type: integer
+                  example: 
+                    - "3"
+                    - 0
+                vae:
+                  type: array
+                  items:
+                    anyOf:
+                      - type: string
+                      - type: integer
+                  example: 
+                    - "4"
+                    - 2
+            class_type:
+              type: string 
+              example: "VAEDecode"
+        9:
+          type: object
+          properties:
+            inputs: 
+              type: object 
+              properties:
+                filename_prefix: 
+                  type: string
+                  example: "ComfyUI"
+                images:
+                  type: array 
+                  items:
+                    anyOf:
+                      - type: string
+                      - type: integer
+                  example:
+                    - "8"
+                    - 0
+            class_type:
+              type: string 
+              example: "SaveImage"
+    Image:
+      type: object 
+      properties:
+        filename:
+          type: string 
+          example: "ComfyUI_00329_.png"
+        subfolder:
+          type: string
+          example: "/" 
+        type:
+          type: string 
+          example: "output" 
+    ApiPromptResponse:
+      type: object
+      properties:
+        prompt_id:
+          type: string
+          example: 238b3c4e-12b6-43cb-acd9-be6eb54c0210
+        number:
+          type: number
+          format: int64
+          example: 426
+        node_errors:
+          type: object
+          example: []
+    ApiHistoryResponse:
+      type: object
+      properties:
+        9b07e4a9-5198-49c0-a348-1ee55a32cad3:
+          type: object 
+          properties:
+            prompt:
+              type: array
+              items:
+                oneOf:
+                  - $ref: '#/components/schemas/Prompt'
+            outputs:
+              type: object
+              properties:
+                9: 
+                  type: object
+                  properties:
+                    images:
+                      type: array 
+                      items:
+                        oneOf:
+                          - $ref: '#/components/schemas/Image'
+  requestBodies:
+    Prompt:
+      description: Prompt object that we have to add to the queue
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Prompt'
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      name: api-key
+      in: header
+  
